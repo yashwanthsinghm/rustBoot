@@ -99,12 +99,32 @@ fn sign_packages(target: &&str) -> Result<(), anyhow::Error> {
             Ok(())
         }
         "stm32f411" => {
-            let _p = xshell::pushd(root_dir().join("boards/rbSigner/signed_images"))?;
-            //  cmd!("python3 --version").run()?;
-            cmd!("python3 convert2bin.py").run()?;
-            // python script has a linux dependency - `wolfcrypt`
-            cmd!("python3 signer.py").run()?;
-            Ok(())
+            // let _p = xshell::pushd(root_dir().join("boards/rbSigner/signed_images"))?;
+            // //  cmd!("python3 --version").run()?;
+            // cmd!("python3 convert2bin.py").run()?;
+            // // python script has a linux dependency - `wolfcrypt`
+            // cmd!("python3 signer.py").run()?;
+            // Ok(())
+            let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
+            // cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
+             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
+             cmd!("cargo run --example SignBootImage stm32f446_bootfw.bin").run()?;
+             cmd!("cargo run --example SignUpdateImage stm32f446_updtfw.bin").run()?;
+             Ok(())
+        }
+        "stm32f446" => {
+            // let _p = xshell::pushd(root_dir().join("boards/rbSigner/signed_images"))?;
+            // //  cmd!("python3 --version").run()?;
+            // cmd!("python3 convert2bin.py").run()?;
+            // // python script has a linux dependency - `wolfcrypt`
+            // cmd!("python3 signer.py").run()?;
+            // Ok(())
+            let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
+             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
+             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
+             cmd!("cargo run --example SignBootImage stm32f446_bootfw.bin").run()?;
+             cmd!("cargo run --example SignUpdateImage stm32f446_updtfw.bin").run()?;
+             Ok(())
         }
         _ => todo!(),
     }

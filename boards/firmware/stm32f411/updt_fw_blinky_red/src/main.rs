@@ -15,6 +15,9 @@ use mcu::prelude::*;
 use mcu::stm32;
 // use panic_probe as _;
 
+#[cfg(feature = "defmt")]
+use defmt_rtt as _; // global logger
+
 use rustBoot_hal::stm::stm32f411::FlashWriterEraser;
 use rustBoot_update::update::{update_flash::FlashUpdater, UpdateInterface};
 

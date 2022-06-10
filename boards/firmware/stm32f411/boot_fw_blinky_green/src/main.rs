@@ -6,8 +6,8 @@ extern crate cortex_m_rt;
 
 extern crate stm32f4xx_hal as mcu;
 
-// #[cfg(feature = "defmt")]
-// use defmt_rtt as _; // global logger
+#[cfg(feature = "defmt")]
+use defmt_rtt as _; // global logger
 
 use cortex_m::peripheral::Peripherals;
 use cortex_m_rt::entry;
