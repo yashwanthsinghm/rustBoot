@@ -106,10 +106,10 @@ fn sign_packages(target: &&str) -> Result<(), anyhow::Error> {
             // cmd!("python3 signer.py").run()?;
             // Ok(())
             let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
-            // cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
-             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
-             cmd!("cargo run --example SignBootImage stm32f446_bootfw.bin").run()?;
-             cmd!("cargo run --example SignUpdateImage stm32f446_updtfw.bin").run()?;
+             cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
+             cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
+             cmd!("cargo run --example SignBootImage stm32f411_bootfw.bin").run()?;
+             cmd!("cargo run --example SignUpdateImage stm32f411_updtfw.bin").run()?;
              Ok(())
         }
         "stm32f446" => {
@@ -120,8 +120,8 @@ fn sign_packages(target: &&str) -> Result<(), anyhow::Error> {
             // cmd!("python3 signer.py").run()?;
             // Ok(())
             let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
-             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
-             //cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
+             cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/boot_fw_blinky_green  -O binary stm32f411_bootfw.bin").run()?;
+             cmd!("rust-objcopy ../../boards/target/thumbv7em-none-eabihf/release/update_fw_blinky_red  -O binary stm32f411_updtfw.bin").run()?;
              cmd!("cargo run --example SignBootImage stm32f446_bootfw.bin").run()?;
              cmd!("cargo run --example SignUpdateImage stm32f446_updtfw.bin").run()?;
              Ok(())
@@ -134,7 +134,7 @@ fn sign_packages(target: &&str) -> Result<(), anyhow::Error> {
 fn flash_signed_fwimages(target: &&str) -> Result<(), anyhow::Error> {
     match *target {
         "nrf52840" => {
-            let _p = xshell::pushd(root_dir().join("boards/rbSigner/signed_images"))?;
+            let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
             let boot_part_addr = format!("0x{:x}", BOOT_PARTITION_ADDRESS);
             cmd!("pyocd flash -t nrf52840 --base-address {boot_part_addr} nrf52840_bootfw_v1234_signed.bin").run()?;
 
@@ -143,13 +143,15 @@ fn flash_signed_fwimages(target: &&str) -> Result<(), anyhow::Error> {
             Ok(())
         }
         "stm32f411" => {
-            let _p = xshell::pushd(root_dir().join("boards/rbSigner/signed_images"))?;
+            let _p = xshell::pushd(root_dir().join("boards/Signingtool"))?;
             let boot_part_addr = format!("0x{:x}", BOOT_PARTITION_ADDRESS);
-            cmd!("pyocd flash --base-address {boot_part_addr} stm32f411_bootfw_v1235_signed.bin")
-                .run()?;
+           // cmd!("pyocd flash --base-address {boot_part_addr} stm32f411_bootfw_v1235_signed.bin")
+            //    .run()?;
+            cmd!("probe-rs-cli download --format Bin --base-address {boot_part_addr} --chip stm32f411vetx stm32f411_bootfw_v1234_signed.bin").run()?;
 
             let updt_part_addr = format!("0x{:x}", UPDATE_PARTITION_ADDRESS);
-            cmd!("pyocd flash -t stm32f411 --base-address {updt_part_addr} stm32f411_updtfw_v1235_signed.bin").run()?;
+            //cmd!("pyocd flash -t stm32f411 --base-address {updt_part_addr} stm32f411_updtfw_v1235_signed.bin").run()?;
+            cmd!("probe-rs-cli download --format Bin --base-address {updt_part_addr} --chip stm32f411vetx stm32f411_updtfw_v1235_signed.bin").run()?;
             Ok(())
         }
         _ => todo!(),
@@ -174,12 +176,31 @@ fn flash_rustBoot(target: &&str) -> Result<(), anyhow::Error> {
 
 #[cfg(feature = "mcu")]
 fn full_image_flash(target: &&str) -> Result<(), anyhow::Error> {
-    build_rustBoot(target)?;
-    sign_packages(target)?;
-    cmd!("pyocd erase -t nrf52 --mass-erase").run()?;
-    flash_signed_fwimages(target)?;
-    flash_rustBoot(target)?;
-    Ok(())
+    // build_rustBoot(target)?;
+    // sign_packages(target)?;
+    // cmd!("pyocd erase -t nrf52 --mass-erase").run()?;
+    // flash_signed_fwimages(target)?;
+    // flash_rustBoot(target)?;
+    // Ok(())
+    match *target {
+        "nrf52840" => {
+            build_rustBoot(target)?;
+            sign_packages(target)?;
+            cmd!("probe-rs-cli erase --chip nRF52840_xxAA").run()?;
+            flash_signed_fwimages(target)?;
+            flash_rustBoot(target)?;
+            Ok(())
+        }
+        "stm32f411" => {
+            build_rustBoot(target)?;
+            sign_packages(target)?;
+            cmd!("probe-rs-cli erase --chip stm32f411vetx").run()?;
+            flash_signed_fwimages(target)?;
+            flash_rustBoot(target)?;
+            Ok(())
+        }
+        &_ => todo!()
+    }
 }
 
 fn root_dir() -> PathBuf {
